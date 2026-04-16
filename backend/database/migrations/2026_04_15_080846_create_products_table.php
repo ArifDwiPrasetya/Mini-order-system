@@ -17,6 +17,7 @@ return new class extends Migration
             $table->decimal('price', 15, 2); // 15 digit total, 2 angka di belakang koma
             $table->integer('stock');
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 

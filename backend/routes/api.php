@@ -22,7 +22,7 @@ Route::middleware('auth:api')->group(function () {
 
 
     // Endpoint Produk
-    Route::get('/products', [ProductController::class, 'index']);
+    Route::apiResource('products', ProductController::class);
 
     // Endpoint Dashboard
     Route::get('/dashboard', [DashboardController::class, 'index']);

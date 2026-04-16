@@ -2,6 +2,7 @@
 import { ref, onMounted, watch } from "vue";
 import AdminLayout from "@/layouts/AdminLayout.vue";
 import productService from "@/services/productService";
+import Swal from "sweetalert2";
 
 const products = ref([]);
 const pagination = ref({
@@ -24,6 +25,7 @@ const fetchProducts = async (page = 1) => {
       per_page: pagination.value.per_page,
     });
     products.value = data.data;
+    console.log(products.value);
     pagination.value = {
       current_page: data.current_page,
       last_page: data.last_page,
@@ -48,6 +50,57 @@ onMounted(() => {
   fetchProducts();
 });
 
+const handleDelete = async (id, name) => {
+  const result = await Swal.fire({
+    title: "Apakah Anda yakin?",
+    text: `Produk "${name}" akan dihapus`,
+    icon: "warning",
+    showCancelButton: true,
+    confirmButtonColor: "#3085d6",
+    cancelButtonColor: "#d33",
+    background: "#1e293b",
+    color: "#f1f5f9",
+    confirmButtonText: "Ya, hapus!",
+    cancelButtonText: "Batal",
+  });
+
+  if (result.isConfirmed) {
+    try {
+      isLoading.value = true;
+      await productService.deleteProduct(id);
+      Swal.fire({
+        toast: true,
+        position: "top-end",
+        icon: "success",
+        title: "Produk berhasil dihapus!",
+        showConfirmButton: false,
+        timer: 3000,
+        timerProgressBar: true,
+        background: "#1e293b",
+        color: "#f1f5f9",
+        customClass: {
+          popup: "border border-slate-700 rounded-xl shadow-2xl",
+        },
+      });
+
+      fetchProducts(pagination.value.current_page);
+    } catch (err) {
+      Swal.fire({
+        icon: "error",
+        title: "Gagal menghapus produk",
+        text: err.response?.data?.message || "Terjadi kesalahan.",
+        background: "#1e293b",
+        color: "#f1f5f9",
+        customClass: {
+          popup: "border border-slate-700 rounded-xl shadow-2xl",
+        },
+      });
+    } finally {
+      isLoading.value = false;
+    }
+  }
+};
+
 let searchTimeout;
 watch(search, () => {
   clearTimeout(searchTimeout);
@@ -69,26 +122,35 @@ watch(search, () => {
         </p>
       </div>
 
-      <div class="relative">
-        <input
-          v-model="search"
-          type="text"
-          placeholder="Cari nama produk..."
-          class="w-full sm:w-64 pl-10 pr-4 py-2.5 bg-slate-900 border border-slate-700 rounded-lg text-slate-100 placeholder-slate-500 focus:ring-2 focus:ring-blue-500 focus:outline-none transition"
-        />
-        <svg
-          class="w-5 h-5 text-slate-500 absolute left-3 top-3"
-          fill="none"
-          stroke="currentColor"
-          viewBox="0 0 24 24"
+      <div class="flex flex-col sm:flex-row items-center gap-4">
+        <div class="relative w-full sm:w-auto">
+          <input
+            v-model="search"
+            type="text"
+            placeholder="Cari nama produk..."
+            class="w-full sm:w-64 pl-10 pr-4 py-2.5 bg-slate-900 border border-slate-700 rounded-lg text-slate-100 placeholder-slate-500 focus:ring-2 focus:ring-blue-500 focus:outline-none transition"
+          />
+          <svg
+            class="w-5 h-5 text-slate-500 absolute left-3 top-3"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+            ></path>
+          </svg>
+        </div>
+
+        <RouterLink
+          to="/products/create"
+          class="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-lg font-medium transition whitespace-nowrap text-center"
         >
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-          ></path>
-        </svg>
+          + Tambah Produk
+        </RouterLink>
       </div>
     </div>
 
@@ -112,6 +174,7 @@ watch(search, () => {
               <th class="p-4 font-medium">Nama Produk</th>
               <th class="p-4 font-medium">Harga</th>
               <th class="p-4 font-medium">Stok</th>
+              <th class="p-4 font-medium text-right">Aksi</th>
             </tr>
           </thead>
           <tbody class="divide-y divide-slate-700/50">
@@ -128,10 +191,13 @@ watch(search, () => {
               <td class="p-4">
                 <div class="h-4 bg-slate-700 rounded w-12"></div>
               </td>
+              <td class="p-4">
+                <div class="h-4 bg-slate-700 rounded w-24 ml-auto"></div>
+              </td>
             </tr>
 
             <tr v-else-if="products.length === 0">
-              <td colspan="4" class="p-8 text-center text-slate-500">
+              <td colspan="5" class="p-8 text-center text-slate-500">
                 Tidak ada produk ditemukan.
               </td>
             </tr>
@@ -160,6 +226,21 @@ watch(search, () => {
                 >
                   {{ product.stock }}
                 </span>
+              </td>
+
+              <td class="p-4 text-right space-x-2 whitespace-nowrap">
+                <RouterLink
+                  :to="`/products/${product.id}/edit`"
+                  class="inline-block text-blue-400 hover:text-blue-300 font-medium text-sm px-3 py-1.5 bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/20 rounded-md transition"
+                >
+                  Edit
+                </RouterLink>
+                <button
+                  @click="handleDelete(product.id, product.name)"
+                  class="inline-block text-rose-400 hover:text-rose-300 font-medium text-sm px-3 py-1.5 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/20 rounded-md transition"
+                >
+                  Hapus
+                </button>
               </td>
             </tr>
           </tbody>

@@ -23,14 +23,26 @@ const router = createRouter({
     {
       path: "/products",
       name: "products",
-      component: () => import("../views/ProductListView.vue"), // Kita akan buat file ini
+      component: () => import("../views/ProductListView.vue"),
+      meta: { requiresAuth: true },
+    },
+    {
+      path: "/products/create",
+      name: "product-create",
+      component: () => import("../views/ProductFormView.vue"),
+      meta: { requiresAuth: true },
+    },
+    {
+      path: "/products/:id/edit",
+      name: "product-edit",
+      component: () => import("../views/ProductFormView.vue"),
       meta: { requiresAuth: true },
     },
 
     {
       path: "/orders",
       name: "orders",
-      component: () => import("../views/OrderListView.vue"), // Kita buat di langkah berikutnya
+      component: () => import("../views/OrderListView.vue"),
       meta: { requiresAuth: true },
     },
     {
@@ -42,7 +54,7 @@ const router = createRouter({
     {
       path: "/orders/:id",
       name: "order-detail",
-      component: () => import("../views/OrderDetailView.vue"), // Kita buat di langkah berikutnya
+      component: () => import("../views/OrderDetailView.vue"),
       meta: { requiresAuth: true },
     },
   ],
