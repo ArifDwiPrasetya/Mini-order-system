@@ -34,10 +34,10 @@ Ikuti langkah-langkah di bawah ini secara berurutan untuk menjalankan Backend di
 
 ### 1. Kloning Repositori & Instalasi Dependensi
 
-Buka terminal Anda dan jalankan perintah berikut:
+Buka terminal dan jalankan perintah berikut:
 
 ```bash
-git clone <URL_REPOSITORY_ANDA>
+git clone <URL_REPOSITORY>
 cd Mini-order-system/backend
 composer install
 ```
